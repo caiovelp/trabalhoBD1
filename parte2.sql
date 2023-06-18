@@ -86,3 +86,63 @@ FROM
         Escola, Pessoa
     WHERE Escola.CODIGO_PROFESSOR = Pessoa.CODIGO) AS SUB
 WHERE SUB.COD1 != SUB.COD2;
+
+-- 7) Listar por escola o número de turmas e o número de professores que ministram alguma disciplina para turmas da escola em questão.
+-- Questão 7
+SELECT
+    Escola.NOME as NOMEESCOLA,
+    COUNT(DISTINCT Turma.CODIGO) AS TURMAS,
+    COUNT(DISTINCT Pessoa.CODIGO) AS PROFESSORES
+FROM
+    Escola, Turma, Pessoa, MinistraTurma, MinistraDisciplina, Disciplina
+WHERE
+    Escola.CODIGO = Turma.CODIGO_ESCOLA AND
+    Pessoa.TIPO = 'Professor' AND
+    MinistraTurma.CODIGO_TURMA = Turma.CODIGO AND
+    MinistraTurma.CODIGO_DISCIPLINA = Disciplina.CODIGO AND
+    MinistraTurma.CODIGO_PROFESSOR = Pessoa.CODIGO AND
+    MinistraDisciplina.CODIGO_DISCIPLINA = Disciplina.CODIGO AND
+    MinistraDisciplina.CODIGO_PROFESSOR = Pessoa.CODIGO
+GROUP BY Escola.CODIGO;
+
+-- 8) Listar por escola a razão entre o número de alunos da escola e o número de professores que ministram alguma disciplina na escola em questão.
+-- Questão 8
+SELECT
+    Escola.NOME as NOMEESCOLA,
+    (COUNT(DISTINCT Aluno.CODIGO)/COUNT(DISTINCT Professor.CODIGO)) AS RAZAO
+FROM
+    Escola, Pessoa as Aluno, Pessoa as Professor, MinistraDisciplina, MinistraTurma, Turma
+WHERE
+    Escola.CODIGO = Turma.CODIGO_ESCOLA AND
+    Aluno.CODIGO_TURMA = Turma.CODIGO AND
+    MinistraDisciplina.CODIGO_PROFESSOR = Professor.CODIGO AND
+    MinistraTurma.CODIGO_DISCIPLINA = MinistraDisciplina.CODIGO_DISCIPLINA AND
+    MinistraTurma.CODIGO_PROFESSOR = Professor.CODIGO AND
+    MinistraTurma.CODIGO_TURMA = Turma.CODIGO
+GROUP BY Escola.CODIGO;
+
+-- 9) Listar todos os contatos dos alunos informando a matrícula e nome do aluno, nome e telefone do contato, ordenado por matrícula do aluno e nome do contato.
+-- Questão 9
+SELECT
+    Pessoa.MATRICULA_ALUNO AS MAT_ALUNO,
+    Pessoa.NOME AS NOME_ALUNO,
+    Contato.NOME AS NOME_CONTATO,
+    Contato.TELEFONE AS TELEFONE_CONTATO
+FROM
+    Contato, Pessoa
+WHERE
+    Contato.CODIGO_ALUNO = Pessoa.CODIGO
+ORDER BY Pessoa.MATRICULA_ALUNO, Contato.NOME;
+
+-- 10) Listar todos os professores que ministram disciplinas para apenas uma turma.
+-- Questão 10
+SELECT
+    Pessoa.NOME AS NOME_PROFESSOR
+FROM
+    Pessoa, MinistraTurma, MinistraDisciplina
+WHERE
+    Pessoa.TIPO = 'Professor' AND
+    MinistraTurma.CODIGO_PROFESSOR = Pessoa.CODIGO AND
+    MinistraTurma.CODIGO_DISCIPLINA = MinistraDisciplina.CODIGO_DISCIPLINA
+GROUP BY Pessoa.CODIGO
+HAVING COUNT(MinistraTurma.CODIGO_TURMA) = 1;
