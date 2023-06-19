@@ -2,16 +2,21 @@ USE trabalhoBancoDeDados1;
 
 -- 1) Listar o nome e a cidade das escolas onde todos os alunos residam na mesma cidade onde a escola está localizada.
 -- Questão 1
-SELECT DISTINCT
-    Pessoa.NOME AS NOMEALUNO,
-    Cidade.NOME AS NOMECIDADE,
-    Escola.NOME AS NOMEESCOLA
+SELECT
+    Escola.NOME AS NOME_ESCOLA,
+    Cidade.NOME AS NOME_CIDADE
 FROM
-    Pessoa, Cidade, Escola
-WHERE
-    Tipo = 'Aluno' AND
-    Escola.CODIGO_CIDADE = Cidade.CODIGO AND
-    Pessoa.CODIGO_CIDADE = Escola.CODIGO_CIDADE;
+    Escola, Cidade
+WHERE Escola.CODIGO_CIDADE = Cidade.CODIGO AND
+  NOT EXISTS (
+    SELECT *
+    FROM
+      Pessoa
+      LEFT JOIN Turma ON Pessoa.CODIGO_TURMA = Turma.CODIGO
+    WHERE
+      Turma.CODIGO_ESCOLA = Escola.CODIGO
+      AND Pessoa.CODIGO_CIDADE <> Escola.CODIGO_CIDADE
+  );
 
 -- 2) Listar o nome e matrícula dos alunos sem nenhum contato cadastrado.
 -- Questão 2
@@ -137,12 +142,15 @@ ORDER BY Pessoa.MATRICULA_ALUNO, Contato.NOME;
 -- 10) Listar todos os professores que ministram disciplinas para apenas uma turma.
 -- Questão 10
 SELECT
-    Pessoa.NOME AS NOME_PROFESSOR
-FROM
-    Pessoa, MinistraTurma, MinistraDisciplina
-WHERE
-    Pessoa.TIPO = 'Professor' AND
-    MinistraTurma.CODIGO_PROFESSOR = Pessoa.CODIGO AND
-    MinistraTurma.CODIGO_DISCIPLINA = MinistraDisciplina.CODIGO_DISCIPLINA
-GROUP BY Pessoa.CODIGO
-HAVING COUNT(MinistraTurma.CODIGO_TURMA) = 1;
+    NOME_PROFESSOR
+    FROM
+    (SELECT
+        Pessoa.NOME AS NOME_PROFESSOR,
+        COUNT(MinistraTurma.CODIGO_TURMA) AS TURMAS_MINISTRADAS
+    FROM
+        Pessoa, MinistraDisciplina, MinistraTurma
+    WHERE
+        Pessoa.CODIGO = MinistraDisciplina.CODIGO_PROFESSOR AND
+        MinistraTurma.CODIGO_PROFESSOR = Pessoa.CODIGO
+    GROUP BY Pessoa.CODIGO) SUB
+WHERE TURMAS_MINISTRADAS = 1;
